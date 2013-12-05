@@ -6,28 +6,28 @@
 //      2013-03-17 - Initial release
 
 /* ============================================
-BGLib Arduino interface library code is placed under the MIT license
-Copyright (c) 2013 Jeff Rowberg
+   BGLib Arduino interface library code is placed under the MIT license
+   Copyright (c) 2013 Jeff Rowberg
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+   Permission is hereby granted, free of charge, to any person obtaining a copy
+   of this software and associated documentation files (the "Software"), to deal
+   in the Software without restriction, including without limitation the rights
+   to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+   copies of the Software, and to permit persons to whom the Software is
+   furnished to do so, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
+   The above copyright notice and this permission notice shall be included in
+   all copies or substantial portions of the Software.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
-===============================================
-*/
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+   THE SOFTWARE.
+   ===============================================
+ */
 
 /*
  * Further thanks to another IDD team (https://github.com/kanderek/IDD-final-project)
@@ -179,33 +179,33 @@ void loop() {
     }
 
 
-  // read the state of the pushbutton value:
-  buttonState_goaway = digitalRead(BUTTON_GOAWAY);
+    // read the state of the pushbutton value:
+    buttonState_goaway = digitalRead(BUTTON_GOAWAY);
 
-  // read the state of the pushbutton value:
-  buttonState_ready = digitalRead(BUTTON_READY);
+    // read the state of the pushbutton value:
+    buttonState_ready = digitalRead(BUTTON_READY);
 
-  // read the state of the pushbutton value:
-  buttonState_wait = digitalRead(BUTTON_WAIT);
+    // read the state of the pushbutton value:
+    buttonState_wait = digitalRead(BUTTON_WAIT);
 
-  message = "Hello!";
-  sendMessage = true;
+    message = "Hello!";
+    sendMessage = true;
 
-  if (sendMessage) {
-    byte bytes[message.length() + 1];
-    message.getBytes(bytes, message.length() + 1);
+    if (sendMessage) {
+        byte bytes[message.length() + 1];
+        message.getBytes(bytes, message.length() + 1);
 
-    uint8 data_len_var = message.length();
-    const uint8 *data_var = bytes;
+        uint8 data_len_var = message.length();
+        const uint8 *data_var = bytes;
 
-    Serial.println("Writing message!");
-    ble112.ble_cmd_attributes_write(GATT_HANDLE_C_TX_DATA, 0, data_len_var, data_var);
+        Serial.println("Writing message!");
+        ble112.ble_cmd_attributes_write(GATT_HANDLE_C_TX_DATA, 0, data_len_var, data_var);
 
 
 
-    delay(500); // Delay to debounce
-  }
-  sendMessage = false;
+        delay(500); // Delay to debounce
+    }
+    sendMessage = false;
 
 }
 
@@ -228,9 +228,9 @@ void onIdle() {
     // turn LED off when we're no longer busy
     //digitalWrite(LED_PIN, LOW);
 
-//    Serial.println("IDLE RESERT");
+    //    Serial.println("IDLE RESERT");
     // set state to ADVERTISING
-//    ble_state = BLE_STATE_ADVERTISING;
+    //    ble_state = BLE_STATE_ADVERTISING;
 }
 
 // called when the parser does not read the expected response in the specified time limit
@@ -279,17 +279,17 @@ void onTXCommandComplete() {
 
 void my_ble_evt_system_boot(const ble_msg_system_boot_evt_t *msg) {
     Serial.println("System boot!");
-    #ifdef DEBUG
-        Serial.print("###\tsystem_boot: { ");
-        Serial.print("major: "); Serial.print(msg -> major, HEX);
-        Serial.print(", minor: "); Serial.print(msg -> minor, HEX);
-        Serial.print(", patch: "); Serial.print(msg -> patch, HEX);
-        Serial.print(", build: "); Serial.print(msg -> build, HEX);
-        Serial.print(", ll_version: "); Serial.print(msg -> ll_version, HEX);
-        Serial.print(", protocol_version: "); Serial.print(msg -> protocol_version, HEX);
-        Serial.print(", hw: "); Serial.print(msg -> hw, HEX);
-        Serial.println(" }");
-    #endif
+#ifdef DEBUG
+    Serial.print("###\tsystem_boot: { ");
+    Serial.print("major: "); Serial.print(msg -> major, HEX);
+    Serial.print(", minor: "); Serial.print(msg -> minor, HEX);
+    Serial.print(", patch: "); Serial.print(msg -> patch, HEX);
+    Serial.print(", build: "); Serial.print(msg -> build, HEX);
+    Serial.print(", ll_version: "); Serial.print(msg -> ll_version, HEX);
+    Serial.print(", protocol_version: "); Serial.print(msg -> protocol_version, HEX);
+    Serial.print(", hw: "); Serial.print(msg -> hw, HEX);
+    Serial.println(" }");
+#endif
 
     // system boot means module is in standby state
     //ble_state = BLE_STATE_STANDBY;
@@ -358,23 +358,23 @@ void my_ble_evt_system_boot(const ble_msg_system_boot_evt_t *msg) {
 }
 
 void my_ble_evt_connection_status(const ble_msg_connection_status_evt_t *msg) {
-    #ifdef DEBUG
-        Serial.print("###\tconnection_status: { ");
-        Serial.print("connection: "); Serial.print(msg -> connection, HEX);
-        Serial.print(", flags: "); Serial.print(msg -> flags, HEX);
-        Serial.print(", address: ");
-        // this is a "bd_addr" data type, which is a 6-byte uint8_t array
-        for (uint8_t i = 0; i < 6; i++) {
-            if (msg -> address.addr[i] < 16) Serial.write('0');
-            Serial.print(msg -> address.addr[i], HEX);
-        }
-        Serial.print(", address_type: "); Serial.print(msg -> address_type, HEX);
-        Serial.print(", conn_interval: "); Serial.print(msg -> conn_interval, HEX);
-        Serial.print(", timeout: "); Serial.print(msg -> timeout, HEX);
-        Serial.print(", latency: "); Serial.print(msg -> latency, HEX);
-        Serial.print(", bonding: "); Serial.print(msg -> bonding, HEX);
-        Serial.println(" }");
-    #endif
+#ifdef DEBUG
+    Serial.print("###\tconnection_status: { ");
+    Serial.print("connection: "); Serial.print(msg -> connection, HEX);
+    Serial.print(", flags: "); Serial.print(msg -> flags, HEX);
+    Serial.print(", address: ");
+    // this is a "bd_addr" data type, which is a 6-byte uint8_t array
+    for (uint8_t i = 0; i < 6; i++) {
+        if (msg -> address.addr[i] < 16) Serial.write('0');
+        Serial.print(msg -> address.addr[i], HEX);
+    }
+    Serial.print(", address_type: "); Serial.print(msg -> address_type, HEX);
+    Serial.print(", conn_interval: "); Serial.print(msg -> conn_interval, HEX);
+    Serial.print(", timeout: "); Serial.print(msg -> timeout, HEX);
+    Serial.print(", latency: "); Serial.print(msg -> latency, HEX);
+    Serial.print(", bonding: "); Serial.print(msg -> bonding, HEX);
+    Serial.println(" }");
+#endif
 
     // "flags" bit description:
     //  - bit 0: connection_connected
@@ -405,12 +405,12 @@ void my_ble_evt_connection_status(const ble_msg_connection_status_evt_t *msg) {
 }
 
 void my_ble_evt_connection_disconnect(const struct ble_msg_connection_disconnected_evt_t *msg) {
-    #ifdef DEBUG
-        Serial.print("###\tconnection_disconnect: { ");
-        Serial.print("connection: "); Serial.print(msg -> connection, HEX);
-        Serial.print(", reason: "); Serial.print(msg -> reason, HEX);
-        Serial.println(" }");
-    #endif
+#ifdef DEBUG
+    Serial.print("###\tconnection_disconnect: { ");
+    Serial.print("connection: "); Serial.print(msg -> connection, HEX);
+    Serial.print(", reason: "); Serial.print(msg -> reason, HEX);
+    Serial.println(" }");
+#endif
 
     // set state to DISCONNECTED
     //ble_state = BLE_STATE_DISCONNECTED;
@@ -433,19 +433,19 @@ void my_ble_evt_connection_disconnect(const struct ble_msg_connection_disconnect
 }
 
 void my_ble_evt_attributes_value(const struct ble_msg_attributes_value_evt_t *msg) {
-    #ifdef DEBUG
-        Serial.print("###\tattributes_value: { ");
-        Serial.print("connection: "); Serial.print(msg -> connection, HEX);
-        Serial.print(", reason: "); Serial.print(msg -> reason, HEX);
-        Serial.print(", handle: "); Serial.print(msg -> handle, HEX);
-        Serial.print(", offset: "); Serial.print(msg -> offset, HEX);
-        Serial.print(", value_len: "); Serial.print(msg -> value.len, HEX);
-        Serial.print(", value_data: ");
-        // this is a "uint8array" data type, which is a length byte and a uint8_t* pointer
-        for (uint8_t i = 0; i < msg -> value.len; i++) {
-            if (msg -> value.data[i] < 16) Serial.write('0');
-            Serial.print(msg -> value.data[i], HEX);
-        }
-        Serial.println(" }");
-    #endif
+#ifdef DEBUG
+    Serial.print("###\tattributes_value: { ");
+    Serial.print("connection: "); Serial.print(msg -> connection, HEX);
+    Serial.print(", reason: "); Serial.print(msg -> reason, HEX);
+    Serial.print(", handle: "); Serial.print(msg -> handle, HEX);
+    Serial.print(", offset: "); Serial.print(msg -> offset, HEX);
+    Serial.print(", value_len: "); Serial.print(msg -> value.len, HEX);
+    Serial.print(", value_data: ");
+    // this is a "uint8array" data type, which is a length byte and a uint8_t* pointer
+    for (uint8_t i = 0; i < msg -> value.len; i++) {
+        if (msg -> value.data[i] < 16) Serial.write('0');
+        Serial.print(msg -> value.data[i], HEX);
+    }
+    Serial.println(" }");
+#endif
 }
