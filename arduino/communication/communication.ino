@@ -29,6 +29,11 @@ THE SOFTWARE.
 ===============================================
 */
 
+/*
+ * Further thanks to another IDD team (https://github.com/kanderek/IDD-final-project)
+ * for helping out with this (code + setting up the arduino and ble module)
+ */
+
 #include <SoftwareSerial.h>
 #include "BGLib.h"
 #include "pitches.h"
