@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<configuration>
+
+  <service uuid="1800">
+    <description>Generic Access Profile</description>
+
+    <characteristic uuid="2a00">
+      <properties read="true" const="true" />
+      <value>Reflex Demo!</value>
+    </characteristic>
+
+    <characteristic uuid="2a01">
+      <properties read="true" const="true" />
+      <value type="hex">0832</value>
+    </characteristic>
+
+  </service>
+
+  <service uuid="180A" >
+
+    <characteristic uuid="2A29">
+      <properties read="true" const="true" />
+      <value>Bluegiga</value>
+    </characteristic>
+
+    <characteristic uuid="2A24">
+      <properties read="true" const="true" />
+      <value>BLE11x</value>
+    </characteristic>
+
+    <characteristic uuid="2A25" id="xgatt_dis_2a25" >
+      <properties read="true" />
+      <value type="hex" length="6" />
+    </characteristic>
+
+  </service>
+
+  <service uuid="e14235c0-5d26-11e3-949a-0800200c9a66" advertise="true">
+
+    <description>Reflex Demo</description>
+
+    <characteristic uuid="2a37" id="xgatt_hrs_2a37">
+      <properties notify="true" />
+      <value length="6" />
+    </characteristic>
+
+  </service>
+</configuration>

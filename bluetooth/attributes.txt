@@ -1,0 +1,2 @@
+xgatt_dis_2a25 12
+xgatt_hrs_2a37 15
