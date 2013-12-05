@@ -6,9 +6,10 @@ quantitatively, and transfers the results remotely to an iPhone via
 a Bluetooth Low Energy module.
 
 ## Team
-[Andre Crabb](https://github.com/acrabb/)
-Steven McKinley
-Lee Chen
+
+* [Andre Crabb](https://github.com/acrabb/)
+* Steven McKinley
+* Lee Chen
 
 ### Credits
 * [BGLib library](https://github.com/jrowberg/bglib/)
