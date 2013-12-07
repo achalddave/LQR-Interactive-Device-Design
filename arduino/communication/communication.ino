@@ -252,11 +252,13 @@ void onBeforeTXCommand() {
     /* wait for "hardware_io_port_status" event to come through, and parse it
      * (and otherwise ignore it) */
     uint8_t *last;
+    Serial.println("Checking activity in before TX");
     while (1) {
         ble112.checkActivity();
         last = ble112.getLastEvent();
         if (last[0] == 0x07 && last[1] == 0x00) break;
     }
+    Serial.println("Completed checking activity in before TX");
 
     /* give a bit of a gap between parsing the wake-up event and allowing the
      * command to go out */
