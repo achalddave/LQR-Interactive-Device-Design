@@ -39,7 +39,6 @@
 
 #include <SoftwareSerial.h>
 #include "BGLib.h"
-#include "pitches.h"
 
 #define DEBUG
 
@@ -91,20 +90,18 @@ BGLib ble112((HardwareSerial *)&bleSerialPort, 0, 1);
 
 #define BGAPI_GET_RESPONSE(v, dType) dType *v = (dType *)ble112.getLastRXPayload()
 
-#define BUTTON_GOAWAY 11
-#define BUTTON_READY  12
-#define BUTTON_WAIT   13
-
-int buttonState_goaway = 0;
-int buttonState_ready  = 0;
-int buttonState_wait   = 0;
-
-boolean sendMessage = false;
-String  message     = "";
+String message     = "I am reflex.";
 
 // ================================================================
 // ARDUINO APPLICATION SETUP AND LOOP FUNCTIONS
 // ================================================================
+
+/*
+ * D2 -> P04
+ * D3 -> P05
+ * D5 -> P16
+ * D6 -> RST
+ */
 
 // initialization sequence
 void setup() {
@@ -122,16 +119,14 @@ void setup() {
     pinMode(BLE_WAKEUP_PIN, OUTPUT);
     digitalWrite(BLE_WAKEUP_PIN, LOW);
 
-    pinMode(BUTTON_GOAWAY, INPUT_PULLUP);
-    pinMode(BUTTON_READY, INPUT_PULLUP);
-    pinMode(BUTTON_WAIT, INPUT_PULLUP);
-
     // set up internal status handlers (these are technically optional)
     ble112.onTimeout = onTimeout;
 
     /* ONLY enable these if you are using the <wakeup_pin> parameter in your
-     * firmware's hardware.xml file */
-    // BLE module must be woken up before sending any UART data
+     * firmware's hardware.xml file
+     *
+     * BLE module must be woken up before sending any UART data
+     */
     ble112.onBeforeTXCommand = onBeforeTXCommand;
     ble112.onTXCommandComplete = onTXCommandComplete;
 
@@ -182,37 +177,29 @@ void loop() {
         } else {
             digitalWrite(LED_PIN, slice < 100 || (slice > 200 && slice < 300) || (slice > 400 && slice < 500));
         }
-    }
 
-
-    // read the state of the pushbutton value:
-    buttonState_goaway = digitalRead(BUTTON_GOAWAY);
-
-    // read the state of the pushbutton value:
-    buttonState_ready = digitalRead(BUTTON_READY);
-
-    // read the state of the pushbutton value:
-    buttonState_wait = digitalRead(BUTTON_WAIT);
-
-    message = "Hello!";
-    sendMessage = true;
-
-    if (sendMessage) {
+        /* Get the message as an array of bytes so we can send it over Bluetooth */
         byte bytes[message.length() + 1];
         message.getBytes(bytes, message.length() + 1);
 
         uint8 data_len_var = message.length();
         const uint8 *data_var = bytes;
 
-        Serial.println("Writing message!");
+        Serial.print("Sending message: ");
+        Serial.println(message);
+
         ble112.ble_cmd_attributes_write(GATT_HANDLE_C_TX_DATA, 0, data_len_var, data_var);
-
-
-
         delay(500); // Delay to debounce
+    } else if (ble_state == BLE_STATE_CONNECTED_MASTER) {
+        Serial.println("BLE_STATE_CONNECTED_MASTER");
+    } else if (ble_state == BLE_STATE_CONNECTING) {
+        Serial.println("BLE_STATE_CONNECTING");
+    } else if (ble_state == BLE_STATE_SCANNING) {
+        Serial.println("BLE_STATE_SCANNING");
+    } else {
+        Serial.print("unknown ble_state: ");
+        Serial.println(ble_state);
     }
-    sendMessage = false;
-
 }
 
 
@@ -283,62 +270,7 @@ void my_ble_evt_system_boot(const ble_msg_system_boot_evt_t *msg) {
     Serial.println(" }");
 #endif
 
-    /* set advertisement interval to 200-300ms, use all advertisement channels
-     * (note min/max parameters are in units of 625 uSec) */
-    ble112.ble_cmd_gap_set_adv_parameters(320, 480, 7);
-    while (ble112.checkActivity(1000));
-
-    // HANDLE CUSTOM ADVERTISEMENT PACKETS
-    // ===================================
-
-    /* build custom advertisement data
-     * default BLE stack value: 0201061107e4ba94c3c9b7cdb09b487a438ae55a19 */
-    uint8 adv_data[] = {
-        0x02, // field length
-        BGLIB_GAP_AD_TYPE_FLAGS, // field type (0x01)
-        BGLIB_GAP_AD_FLAG_GENERAL_DISCOVERABLE | BGLIB_GAP_AD_FLAG_BREDR_NOT_SUPPORTED, // data (0x02 | 0x04 = 0x06)
-        0x11, // field length
-        BGLIB_GAP_AD_TYPE_SERVICES_128BIT_ALL, // field type (0x07)
-        0xe4, 0xba, 0x94, 0xc3, 0xc9, 0xb7, 0xcd, 0xb0, 0x9b, 0x48, 0x7a, 0x43, 0x8a, 0xe5, 0x5a, 0x19
-    };
-
-    // set custom advertisement data
-    ble112.ble_cmd_gap_set_adv_data(0, 0x15, adv_data);
-    while (ble112.checkActivity(1000));
-
-    /* build custom scan response data (i.e. the Device Name value)
-     * default BLE stack value: 140942474c69622055314131502033382e344e4657 */
-    uint8 sr_data[] = {
-        0x14, // field length
-        BGLIB_GAP_AD_TYPE_LOCALNAME_COMPLETE, // field type
-        '1', '2', '3', ' ', 'F', 'a', 'k', 'e', ' ', 'S', 'r', 'e', 'e', 't', '0', '0', ':', '0', '0'
-    };
-
-    // get BLE MAC address
-    ble112.ble_cmd_system_address_get();
-    while (ble112.checkActivity(1000));
-    BGAPI_GET_RESPONSE(r0, ble_msg_system_address_get_rsp_t);
-
-    /* assign last three bytes of MAC address to ad packet friendly name
-     * (instead of 00:00:00 above) */
-    sr_data[13] = (r0->address.addr[2] / 0x10) + 48 + ((r0->address.addr[2] / 0x10) / 10 * 7); // MAC byte 4 10's digit
-    sr_data[14] = (r0->address.addr[2] & 0xF)  + 48 + ((r0->address.addr[2] & 0xF ) / 10 * 7); // MAC byte 4 1's digit
-    sr_data[16] = (r0->address.addr[1] / 0x10) + 48 + ((r0->address.addr[1] / 0x10) / 10 * 7); // MAC byte 5 10's digit
-    sr_data[17] = (r0->address.addr[1] & 0xF)  + 48 + ((r0->address.addr[1] & 0xF ) / 10 * 7); // MAC byte 5 1's digit
-    sr_data[19] = (r0->address.addr[0] / 0x10) + 48 + ((r0->address.addr[0] / 0x10) / 10 * 7); // MAC byte 6 10's digit
-    sr_data[20] = (r0->address.addr[0] & 0xF)  + 48 + ((r0->address.addr[0] & 0xF ) / 10 * 7); // MAC byte 6 1's digit
-
-    // set custom scan response data (i.e. the Device Name value)
-    ble112.ble_cmd_gap_set_adv_data(1, 0x15, sr_data);
-    while (ble112.checkActivity(1000));
-
-    /* put module into discoverable/connectable mode (with user-defined
-     * advertisement data) */
-    ble112.ble_cmd_gap_set_mode(BGLIB_GAP_USER_DATA, BGLIB_GAP_UNDIRECTED_CONNECTABLE);
-    while (ble112.checkActivity(1000));
-
-    // set state to ADVERTISING
-    ble_state = BLE_STATE_ADVERTISING;
+    startAdvertising();
 }
 
 void my_ble_evt_connection_status(const ble_msg_connection_status_evt_t *msg) {
@@ -417,20 +349,78 @@ void my_ble_evt_connection_disconnect(const struct ble_msg_connection_disconnect
  * Called when we receive some data.
  */
 void my_ble_evt_attributes_value(const struct ble_msg_attributes_value_evt_t *msg) {
-#ifdef DEBUG
-    Serial.print("###\tattributes_value: { ");
-    Serial.print("connection: "); Serial.print(msg->connection, HEX);
-    Serial.print(", reason: "); Serial.print(msg->reason, HEX);
-    Serial.print(", handle: "); Serial.print(msg->handle, HEX);
-    Serial.print(", offset: "); Serial.print(msg->offset, HEX);
-    Serial.print(", value_len: "); Serial.print(msg->value.len, HEX);
-    Serial.print(", value_data: ");
-    /* this is a "uint8array" data type, which is a length byte and a uint8_t*
-     * pointer */
-    for (uint8_t i = 0; i < msg->value.len; i++) {
-        if (msg->value.data[i] < 16) Serial.write('0');
-        Serial.print(msg->value.data[i], HEX);
-    }
-    Serial.println(" }");
-#endif
+    #ifdef DEBUG
+        Serial.print("###\tattributes_value: { ");
+        Serial.print("connection: "); Serial.print(msg -> connection, HEX);
+        Serial.print(", reason: "); Serial.print(msg -> reason, HEX);
+        Serial.print(", handle: "); Serial.print(msg -> handle, HEX);
+        Serial.print(", offset: "); Serial.print(msg -> offset, HEX);
+        Serial.print(", value_len: "); Serial.print(msg -> value.len, HEX);
+        Serial.print(", value_data: ");
+        // this is a "uint8array" data type, which is a length byte and a uint8_t* pointer
+        for (uint8_t i = 0; i < msg -> value.len; i++) {
+            if (msg -> value.data[i] < 16) Serial.write('0');
+            Serial.print(msg -> value.data[i], HEX);
+        }
+        Serial.println(" }");
+    #endif
+}
+
+void startAdvertising() {
+    /* set advertisement interval to 200-300ms, use all advertisement channels
+     * (note min/max parameters are in units of 625 uSec) */
+    ble112.ble_cmd_gap_set_adv_parameters(320, 480, 7);
+    while (ble112.checkActivity(1000));
+
+    // HANDLE CUSTOM ADVERTISEMENT PACKETS
+    // ===================================
+
+    /* build custom advertisement data
+     * default BLE stack value: 0201061107e4ba94c3c9b7cdb09b487a438ae55a19 */
+    uint8 adv_data[] = {
+        0x02, // field length
+        BGLIB_GAP_AD_TYPE_FLAGS, // field type (0x01)
+        BGLIB_GAP_AD_FLAG_GENERAL_DISCOVERABLE | BGLIB_GAP_AD_FLAG_BREDR_NOT_SUPPORTED, // data (0x02 | 0x04 = 0x06)
+        0x11, // field length
+        BGLIB_GAP_AD_TYPE_SERVICES_128BIT_ALL, // field type (0x07)
+        0xe4, 0xba, 0x94, 0xc3, 0xc9, 0xb7, 0xcd, 0xb0, 0x9b, 0x48, 0x7a, 0x43, 0x8a, 0xe5, 0x5a, 0x19
+    };
+
+    // set custom advertisement data
+    ble112.ble_cmd_gap_set_adv_data(0, 0x15, adv_data);
+    while (ble112.checkActivity(1000));
+
+    /* build custom scan response data (i.e. the Device Name value)
+     * default BLE stack value: 140942474c69622055314131502033382e344e4657 */
+    uint8 sr_data[] = {
+        0x14, // field length
+        BGLIB_GAP_AD_TYPE_LOCALNAME_COMPLETE, // field type
+        '1', '2', '3', ' ', 'F', 'a', 'k', 'e', ' ', 'S', 'r', 'e', 'e', 't', '0', '0', ':', '0', '0'
+    };
+
+    // get BLE MAC address
+    ble112.ble_cmd_system_address_get();
+    while (ble112.checkActivity(1000));
+    BGAPI_GET_RESPONSE(r0, ble_msg_system_address_get_rsp_t);
+
+    /* assign last three bytes of MAC address to ad packet friendly name
+     * (instead of 00:00:00 above) */
+    sr_data[13] = (r0->address.addr[2] / 0x10) + 48 + ((r0->address.addr[2] / 0x10) / 10 * 7); // MAC byte 4 10's digit
+    sr_data[14] = (r0->address.addr[2] & 0xF)  + 48 + ((r0->address.addr[2] & 0xF ) / 10 * 7); // MAC byte 4 1's digit
+    sr_data[16] = (r0->address.addr[1] / 0x10) + 48 + ((r0->address.addr[1] / 0x10) / 10 * 7); // MAC byte 5 10's digit
+    sr_data[17] = (r0->address.addr[1] & 0xF)  + 48 + ((r0->address.addr[1] & 0xF ) / 10 * 7); // MAC byte 5 1's digit
+    sr_data[19] = (r0->address.addr[0] / 0x10) + 48 + ((r0->address.addr[0] / 0x10) / 10 * 7); // MAC byte 6 10's digit
+    sr_data[20] = (r0->address.addr[0] & 0xF)  + 48 + ((r0->address.addr[0] & 0xF ) / 10 * 7); // MAC byte 6 1's digit
+
+    // set custom scan response data (i.e. the Device Name value)
+    ble112.ble_cmd_gap_set_adv_data(1, 0x15, sr_data);
+    while (ble112.checkActivity(1000));
+
+    /* put module into discoverable/connectable mode (with user-defined
+     * advertisement data) */
+    ble112.ble_cmd_gap_set_mode(BGLIB_GAP_USER_DATA, BGLIB_GAP_UNDIRECTED_CONNECTABLE);
+    while (ble112.checkActivity(1000));
+
+    // set state to ADVERTISING
+    ble_state = BLE_STATE_ADVERTISING;
 }
