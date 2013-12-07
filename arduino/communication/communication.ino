@@ -120,6 +120,8 @@ void setup() {
     digitalWrite(BLE_WAKEUP_PIN, LOW);
 
     // set up internal status handlers (these are technically optional)
+    ble112.onBusy = onBusy;
+    ble112.onIdle = onIdle;
     ble112.onTimeout = onTimeout;
 
     /* ONLY enable these if you are using the <wakeup_pin> parameter in your
@@ -207,6 +209,24 @@ void loop() {
 // ================================================================
 // INTERNAL BGLIB CLASS CALLBACK FUNCTIONS
 // ================================================================
+
+// called when the module begins sending a command
+void onBusy() {
+    // turn LED on when we're busy
+    Serial.println("Busy");
+    //digitalWrite(LED_PIN, HIGH);
+}
+
+// called when the module receives a complete response or "system_boot" event
+void onIdle() {
+    Serial.println("Idle");
+    // turn LED off when we're no longer busy
+    //digitalWrite(LED_PIN, LOW);
+
+//    Serial.println("IDLE RESERT");
+    // set state to ADVERTISING
+//    ble_state = BLE_STATE_ADVERTISING;
+}
 
 // called when the parser does not read the expected response in the specified time limit
 void onTimeout() {
