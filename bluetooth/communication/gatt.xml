@@ -9,7 +9,7 @@
         <characteristic uuid="2A00" id="c_device_name">
             <description>Device Name</description>
             <properties read="true" const="true" />
-            <value>BGLib U1A1P 38.4NFW</value>
+            <value>Reflex X1</value>
         </characteristic>
 
         <!-- 2A01: org.bluetooth.characteristic.gap.appearance -->
@@ -44,7 +44,7 @@
     </service>
 
     <!-- custom service for data transmission test -->
-    <service uuid="195AE58A-437A-489B-B0CD-B7C9C394BAE4" id="data_transceiver" advertise="true">
+    <service uuid="e14235c0-5d26-11e3-949a-0800200c9a66" id="data_transceiver" advertise="true">
         <description>Data transceiver service</description>
 
         <characteristic uuid="5FC569A0-74A9-4FA4-B8B7-8354C86E45A4" id="c_rx_data">
@@ -53,7 +53,7 @@
             <value variable_length="true" length="20"></value>
         </characteristic>
 
-        <characteristic uuid="21819AB0-C937-4188-B0DB-B9621E1696CD" id="c_tx_data">
+        <characteristic uuid="e14235c1-5d26-11e3-949a-0800200c9a66" id="c_tx_data">
             <description>TX Data</description>
             <properties read="true" notify="true" indicate="true" />
             <value variable_length="true" length="20"></value>
