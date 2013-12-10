@@ -90,7 +90,12 @@ BGLib ble112((HardwareSerial *)&bleSerialPort, 0, 1);
 
 #define BGAPI_GET_RESPONSE(v, dType) dType *v = (dType *)ble112.getLastRXPayload()
 
+bool sendStringMessage = false; // otherwise sends some hex value
 String message     = "I am reflex.";
+
+// Figure out when we've just connected
+bool disconnected = true;
+unsigned long connection_time;
 
 // ================================================================
 // ARDUINO APPLICATION SETUP AND LOOP FUNCTIONS
@@ -157,8 +162,6 @@ void loop() {
     // keep polling for new data from BLE
     ble112.checkActivity();
 
-    Serial.println("In main loop");
-
     /* blink Arduino LED based on state:
      *  - solid = STANDBY
      *  - 1 pulse per second = ADVERTISING
@@ -167,40 +170,63 @@ void loop() {
      */
     uint16_t slice = millis() % 1000;
     if (ble_state == BLE_STATE_STANDBY) {
-        Serial.println("BLE_STATE_STANDBY");
+        if (slice == 0) Serial.println("BLE_STATE_STANDBY");
         digitalWrite(LED_PIN, HIGH);
     } else if (ble_state == BLE_STATE_ADVERTISING) {
-        Serial.println("BLE_STATE_ADVERTISING");
+        if (slice == 0) Serial.println("BLE_STATE_ADVERTISING");
         digitalWrite(LED_PIN, slice < 100);
-    } else if (ble_state == BLE_STATE_CONNECTED_SLAVE) {
-        Serial.println("BLE_STATE_CONNECTED_SLAVE");
+    } else if (ble_state == BLE_STATE_CONNECTED_SLAVE 
+                    || ble_state == BLE_STATE_CONNECTED_MASTER) {
+        Serial.println(ble_state == BLE_STATE_CONNECTED_SLAVE ? "BLE_STATE_CONNECTED_SLAVE" : "BLE_STATE_CONNECTED_MASTER");
+
         if (!ble_encrypted) {
             digitalWrite(LED_PIN, slice < 100 || (slice > 200 && slice < 300));
         } else {
             digitalWrite(LED_PIN, slice < 100 || (slice > 200 && slice < 300) || (slice > 400 && slice < 500));
         }
 
-        /* Get the message as an array of bytes so we can send it over Bluetooth */
-        byte bytes[message.length() + 1];
-        message.getBytes(bytes, message.length() + 1);
+        if (millis() > connection_time + 4000) {
+            Serial.print("Millis:"); Serial.println(millis());
+            Serial.print("Connection time:"); Serial.println(connection_time);
+            /* Get the message as an array of bytes so we can send it over
+             * Bluetooth */
+            if (sendStringMessage) {
+                byte bytes[message.length() + 1];
+                message.getBytes(bytes, message.length() + 1);
 
-        uint8 data_len_var = message.length();
-        const uint8 *data_var = bytes;
+                uint8 data_len_var = message.length();
+                const uint8 *data_var = bytes;
 
-        Serial.print("Sending message: ");
-        Serial.println(message);
+                Serial.print("Sending message: ");
+                Serial.println(message);
 
-        ble112.ble_cmd_attributes_write(GATT_HANDLE_C_TX_DATA, 0, data_len_var, data_var);
+                ble112.ble_cmd_attributes_write(GATT_HANDLE_C_TX_DATA, 0, data_len_var, data_var);
+            } else {
+                byte data[6] = {
+                    random(0,200),
+                    random(0,200),
+                    random(0,200),
+                    random(0,200),
+                    random(0,200),
+                    random(0,200)
+                };
+                ble112.ble_cmd_attributes_write(GATT_HANDLE_C_TX_DATA, 0, 6, data);
+            }
+        } else {
+            Serial.println("Not sending data as I connected recently");
+        }
         delay(500); // Delay to debounce
     } else if (ble_state == BLE_STATE_CONNECTED_MASTER) {
-        Serial.println("BLE_STATE_CONNECTED_MASTER");
+        if (slice == 0) Serial.println("BLE_STATE_CONNECTED_MASTER");
     } else if (ble_state == BLE_STATE_CONNECTING) {
-        Serial.println("BLE_STATE_CONNECTING");
+        if (slice == 0) Serial.println("BLE_STATE_CONNECTING");
     } else if (ble_state == BLE_STATE_SCANNING) {
-        Serial.println("BLE_STATE_SCANNING");
+        if (slice == 0) Serial.println("BLE_STATE_SCANNING");
     } else {
-        Serial.print("unknown ble_state: ");
-        Serial.println(ble_state);
+        if (slice == 0) {
+            Serial.print("unknown ble_state: ");
+            Serial.println(ble_state);
+        }
     }
 }
 
@@ -327,8 +353,11 @@ void my_ble_evt_connection_status(const ble_msg_connection_status_evt_t *msg) {
      */
 
     // check for new connection established
-    if ((msg->flags & 0x05) == 0x05) {
+    if ((msg->flags & 0x05) == 0x05) { // bit 0, 2 on
         // track state change based on last known state, since we can connect two ways
+        Serial.println("Connected, saving millis");
+        disconnected = false;
+        connection_time = millis();
         if (ble_state == BLE_STATE_ADVERTISING) {
             ble_state = BLE_STATE_CONNECTED_SLAVE;
         } else {
@@ -341,12 +370,14 @@ void my_ble_evt_connection_status(const ble_msg_connection_status_evt_t *msg) {
 
     // update "bonded" status
     ble_bonding = msg->bonding;
+
 }
 
 /*
  * We were disconnected!
  */
 void my_ble_evt_connection_disconnect(const struct ble_msg_connection_disconnected_evt_t *msg) {
+    disconnected = true;
 #ifdef DEBUG
     Serial.print("###\tconnection_disconnect: { ");
     Serial.print("connection: "); Serial.print(msg->connection, HEX);
