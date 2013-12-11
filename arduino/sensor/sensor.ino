@@ -138,13 +138,13 @@ void loop()
             //Serial.println(startTime);
             //Serial.println(" ST");
 
-            while ((millis()-startTime)<30)                //Find the spike maximum in the next milliseconds
-            {                                              //
+            while ((millis()-startTime)<30)                  //Find the spike maximum in the next milliseconds
+            {                                                //
                 accelReading=analogRead(zpin)-averageAccel;  //
                 if(accelReading>spike)                       //
                 {                                            //
-                    spike=accelReading;                        //
-                    //startTime=millis();                      //
+                    spike=accelReading;                      //
+                    //startTime=millis();                    //
                 }                                            //
                 //
             }
