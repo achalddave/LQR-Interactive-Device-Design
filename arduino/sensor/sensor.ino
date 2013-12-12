@@ -16,7 +16,7 @@ typedef int  pin;
 
 #ifdef DEBUG
 #define LOG(x) Serial.print(x)
-#define LOGLN(x) Serial.print(x)
+#define LOGLN(x) Serial.println(x)
 #else
 #define LOG(x)
 #define LOGLN(x)
@@ -168,7 +168,7 @@ void loop() {
                 }
             }
 
-            LOG("Spike: ")
+            LOG("Spike: ");
             LOG(spike);
 
             reflexPeak = 0; // reset variable
