@@ -349,20 +349,20 @@ void sendData() {
     if (ble_state == BLE_STATE_CONNECTED_SLAVE 
             || ble_state == BLE_STATE_CONNECTED_MASTER) {
         byte data[12] = {
-            deltaTime & 0xff,
-            (deltaTime >> 8) & 0xff,
-            (deltaTime >> 16) & 0xff,
             (deltaTime >> 24) & 0xff,
+            (deltaTime >> 16) & 0xff,
+            (deltaTime >> 8) & 0xff,
+            deltaTime & 0xff,
 
-            responseTime & 0xff,
-            (responseTime >> 8) & 0xff,
-            (responseTime >> 16) & 0xff,
             (responseTime >> 24) & 0xff,
+            (responseTime >> 16) & 0xff,
+            (responseTime >> 8) & 0xff,
+            responseTime & 0xff,
 
-            spike & 0xff,
-            (spike >> 8) & 0xff,
-            (spike >> 16) & 0xff,
             (spike >> 24) & 0xff,
+            (spike >> 16) & 0xff,
+            (spike >> 8) & 0xff,
+            spike & 0xff,
         };
 
         ble112.ble_cmd_attributes_write(GATT_HANDLE_C_TX_DATA, 0, 12, data);
