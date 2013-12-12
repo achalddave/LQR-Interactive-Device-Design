@@ -348,24 +348,39 @@ void loop() {
 void sendData() {
     if (ble_state == BLE_STATE_CONNECTED_SLAVE 
             || ble_state == BLE_STATE_CONNECTED_MASTER) {
-        byte data[12] = {
-            (deltaTime >> 24) & 0xff,
-            (deltaTime >> 16) & 0xff,
-            (deltaTime >> 8) & 0xff,
-            deltaTime & 0xff,
 
-            (responseTime >> 24) & 0xff,
-            (responseTime >> 16) & 0xff,
-            (responseTime >> 8) & 0xff,
-            responseTime & 0xff,
+        byte deltaTimeSend = deltaTime & 0xff;
+        byte responseTimeSend = responseTime & 0xff;
+        /* Spike can go up to 500; scale down to within one byte (255) */
+        byte spikeSend = (spike / 2) & 0xff;
 
-            (spike >> 24) & 0xff,
-            (spike >> 16) & 0xff,
-            (spike >> 8) & 0xff,
-            spike & 0xff,
+        byte data[3] = {
+            deltaTimeSend,
+            responseTimeSend,
+            spikeSend
         };
 
         ble112.ble_cmd_attributes_write(GATT_HANDLE_C_TX_DATA, 0, 12, data);
+
+        /* byte data[12] = {
+         *     (deltaTime >> 24) & 0xff,
+         *     (deltaTime >> 16) & 0xff,
+         *     (deltaTime >> 8) & 0xff,
+         *     deltaTime & 0xff,
+
+         *     (responseTime >> 24) & 0xff,
+         *     (responseTime >> 16) & 0xff,
+         *     (responseTime >> 8) & 0xff,
+         *     responseTime & 0xff,
+
+         *     (spike >> 24) & 0xff,
+         *     (spike >> 16) & 0xff,
+         *     (spike >> 8) & 0xff,
+         *     spike & 0xff,
+         * };
+
+         * ble112.ble_cmd_attributes_write(GATT_HANDLE_C_TX_DATA, 0, 12, data);
+         */
     } else {
         Serial.println("Attempted to send data, but wasn't connected!");
     }
